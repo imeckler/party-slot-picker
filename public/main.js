@@ -7,13 +7,12 @@ const nameEl = document.getElementById("name");
 const submitEl = document.getElementById("submit");
 const errorEl = document.getElementById("error");
 const rangeDisplayEl = document.getElementById("range-display");
-const partyEl = document.getElementById("party");
+const headerDefaultEl = document.getElementById("header-default");
+const headerPartyEl = document.getElementById("header-party");
 const partyTitleEl = document.getElementById("party-title");
 const partyDescEl = document.getElementById("party-description");
 const partyAddrEl = document.getElementById("party-address");
 const partyRangeEl = document.getElementById("party-range");
-const editEl = document.getElementById("edit");
-const bannerEl = document.getElementById("existing-banner");
 
 let slots = [];        // [{ time: "HH:MM" (start of 30-min block), label, count }]
 let boundaries = [];   // [{ time, label }] — 17 boundaries for start..end
@@ -178,9 +177,7 @@ async function loadMe() {
     const endMin = toMinutes(data.rsvp.end) - 30;
     const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
     lastClick = fmt(endMin);
-    bannerEl.style.display = "block";
-    bannerEl.textContent = "Welcome back. Update your time or name below and submit again to save changes.";
-    // Reveal the party info (address, etc.) since this person has already RSVPed.
+    // Swap to the party-info header since this person has already RSVPed.
     try {
       const pr = await fetch("api/party");
       const pdata = await pr.json();
@@ -223,17 +220,10 @@ function showParty(party, rsvp, { scroll = true } = {}) {
   partyDescEl.textContent = party.description;
   partyAddrEl.textContent = party.address;
   partyRangeEl.textContent = `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`;
-  partyEl.style.display = "block";
-  if (scroll) partyEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  headerDefaultEl.style.display = "none";
+  headerPartyEl.style.display = "block";
+  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
-editEl?.addEventListener("click", async () => {
-  partyEl.style.display = "none";
-  submitEl.disabled = false;
-  await loadSlots();
-  render();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
 
 nameEl.addEventListener("input", updateSubmitState);
 submitEl.addEventListener("click", submit);

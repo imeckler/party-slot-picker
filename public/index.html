@@ -8,10 +8,17 @@
 </head>
 <body>
 <div class="container">
-  <h1>When are you coming?</h1>
-  <p class="muted">Pick the time you plan to arrive. Color shows how many other people picked the same slot.</p>
+  <div id="header-default">
+    <h1>When are you coming?</h1>
+    <p class="muted">Pick the time you plan to arrive. Color shows how many other people picked the same slot.</p>
+  </div>
 
-  <div id="existing-banner" class="banner" style="display:none;"></div>
+  <div id="header-party" style="display:none;">
+    <h1 id="party-title"></h1>
+    <p id="party-description"></p>
+    <div class="address" id="party-address"></div>
+    <p class="muted">You're coming <strong id="party-range"></strong>. Update your time or name below to change your RSVP.</p>
+  </div>
 
   <!-- h2>Time</h2 -->
   <div class="legend">
@@ -30,14 +37,6 @@
   <div id="error" class="error" role="alert"></div>
 
   <button id="submit" class="btn" disabled>Submit RSVP</button>
-
-  <div id="party" class="party" style="display:none;">
-    <h2 id="party-title"></h2>
-    <p id="party-description"></p>
-    <div class="address" id="party-address"></div>
-    <p class="muted">You're coming <strong id="party-range"></strong>. You can return to this page any time to change your range or name.</p>
-    <button id="edit" class="btn btn-secondary" type="button">Edit my RSVP</button>
-  </div>
 </div>
 <script src="public/main.js"></script>
 </body>

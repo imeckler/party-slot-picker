@@ -200,28 +200,22 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   font-size: 0.95rem;
 }
 
-.party {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 16px;
-}
-.party h2 { font-size: 2rem; margin-top: 0; }
-.party .address {
+#header-party h1 { margin-bottom: 8px; }
+
+#header-party .address {
   font-weight: 600;
   background: #f5f5f5;
   padding: 10px 12px;
   border-radius: 6px;
   margin: 12px 0;
-  font-size: 1.6rem; 
+  font-size: 1.6rem;
 }
 
 #party-description {
   font-size: 1.6rem;
 }
 
-.party .muted {
+#header-party .muted {
   font-size: 1.2rem;
 }
 
