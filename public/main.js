@@ -180,6 +180,14 @@ async function loadMe() {
     lastClick = fmt(endMin);
     bannerEl.style.display = "block";
     bannerEl.textContent = "Welcome back. Update your time or name below and submit again to save changes.";
+    // Reveal the party info (address, etc.) since this person has already RSVPed.
+    try {
+      const pr = await fetch("api/party");
+      const pdata = await pr.json();
+      showParty(pdata.party, data.rsvp, { scroll: false });
+    } catch {
+      // Non-fatal; submitting will fetch the party info again.
+    }
   }
 }
 
@@ -210,13 +218,13 @@ async function submit() {
   }
 }
 
-function showParty(party, rsvp) {
+function showParty(party, rsvp, { scroll = true } = {}) {
   partyTitleEl.textContent = party.title;
   partyDescEl.textContent = party.description;
   partyAddrEl.textContent = party.address;
   partyRangeEl.textContent = `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`;
   partyEl.style.display = "block";
-  partyEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (scroll) partyEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 editEl?.addEventListener("click", async () => {
