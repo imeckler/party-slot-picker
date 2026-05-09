@@ -179,7 +179,7 @@ async function loadMe() {
     const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
     lastClick = fmt(endMin);
     bannerEl.style.display = "block";
-    bannerEl.textContent = `Welcome back, ${data.rsvp.name}. Update your time or name below and submit again to save changes.`;
+    bannerEl.textContent = "Welcome back. Update your time or name below and submit again to save changes.";
   }
 }
 
