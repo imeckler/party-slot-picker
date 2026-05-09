@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RSVP — pick a time</title>
+<link rel="stylesheet" href="/public/styles.css" />
+</head>
+<body>
+<div class="container">
+  <h1>When are you coming?</h1>
+  <p class="muted">Pick the time you plan to arrive. Color shows how many other people picked the same slot.</p>
+
+  <div id="existing-banner" class="banner" style="display:none;"></div>
+
+  <h2>Time</h2>
+  <div class="legend">
+    <span>quiet</span>
+    <div class="legend-bar"></div>
+    <span>busy</span>
+  </div>
+  <div id="range-display" class="range-display">Tap a row to set your arrival time, then tap another to set when you'll leave.</div>
+  <div id="slots" aria-label="Time range picker"></div>
+
+  <div class="form-row">
+    <label for="name">Your name</label>
+    <input id="name" type="text" autocomplete="name" maxlength="80" placeholder="e.g. Alex Rivera" />
+  </div>
+
+  <div id="error" class="error" role="alert"></div>
+
+  <button id="submit" class="btn" disabled>Submit RSVP</button>
+
+  <div id="party" class="party" style="display:none;">
+    <h2 id="party-title"></h2>
+    <p id="party-description"></p>
+    <div class="address" id="party-address"></div>
+    <p class="muted">You're coming <strong id="party-range"></strong>. You can return to this page any time to change your range or name.</p>
+    <button id="edit" class="btn btn-secondary" type="button">Edit my RSVP</button>
+  </div>
+</div>
+<script src="/public/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+import express, { type Request, type Response, type NextFunction } from "express";
+import cookieParser from "cookie-parser";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  BOUNDARIES,
+  BOUNDARY_SET,
+  SLOTS,
+  formatTimeLabel,
+  slotInRange,
+  toMinutes,
+} from "./slots.js";
+import {
+  countsBySlot,
+  deleteRsvp,
+  getRsvp,
+  listRsvps,
+  upsertRsvp,
+} from "./db.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.resolve(__dirname, "..", "public");
+
+const PORT = Number(process.env.PORT ?? 3000);
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "change-me";
+const PARTY = {
+  title: process.env.PARTY_TITLE ?? "The Party",
+  address: process.env.PARTY_ADDRESS ?? "123 Example St, Somewhere",
+  description:
+    process.env.PARTY_DESCRIPTION ??
+    "Replace this with the real party description. Snacks, drinks, and good company. Come and go as you please.",
+};
+
+const RSVP_COOKIE = "rsvp_id";
+const ADMIN_COOKIE = "admin_session";
+const COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 365;
+
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
+app.use("/public", express.static(PUBLIC_DIR));
+
+// ---- Public API ---------------------------------------------------------
+
+app.get("/api/slots", async (_req, res) => {
+  const counts = await countsBySlot();
+  res.json({
+    slots: SLOTS.map((s) => ({ time: s, label: formatTimeLabel(s), count: counts[s] ?? 0 })),
+    boundaries: BOUNDARIES.map((b) => ({ time: b, label: formatTimeLabel(b) })),
+  });
+});
+
+app.get("/api/me", async (req, res) => {
+  const id = req.cookies[RSVP_COOKIE];
+  if (!id) return res.json({ rsvp: null });
+  const rsvp = await getRsvp(id);
+  res.json({ rsvp: rsvp ?? null });
+});
+
+app.post("/api/rsvp", async (req, res) => {
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const start = typeof req.body?.start === "string" ? req.body.start : "";
+  const end = typeof req.body?.end === "string" ? req.body.end : "";
+
+  if (!name) return res.status(400).json({ error: "Name is required." });
+  if (name.length > 80) return res.status(400).json({ error: "Name too long." });
+  if (!BOUNDARY_SET.has(start) || !BOUNDARY_SET.has(end)) {
+    return res.status(400).json({ error: "Invalid time range." });
+  }
+  if (toMinutes(end) <= toMinutes(start)) {
+    return res.status(400).json({ error: "End time must be after start time." });
+  }
+
+  const existingId: string | undefined = req.cookies[RSVP_COOKIE];
+  const rsvp = await upsertRsvp({ id: existingId, name, start, end });
+
+  res.cookie(RSVP_COOKIE, rsvp.id, {
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: COOKIE_MAX_AGE,
+  });
+
+  res.json({ rsvp, party: PARTY });
+});
+
+app.post("/api/rsvp/clear", async (req, res) => {
+  const id = req.cookies[RSVP_COOKIE];
+  if (id) await deleteRsvp(id);
+  res.clearCookie(RSVP_COOKIE);
+  res.json({ ok: true });
+});
+
+app.get("/api/party", (_req, res) => {
+  res.json({ party: PARTY });
+});
+
+// ---- Admin --------------------------------------------------------------
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.cookies[ADMIN_COOKIE] === ADMIN_PASSWORD) return next();
+  res.status(401).json({ error: "Unauthorized" });
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Wrong password." });
+  }
+  res.cookie(ADMIN_COOKIE, ADMIN_PASSWORD, {
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: COOKIE_MAX_AGE,
+  });
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/logout", (_req, res) => {
+  res.clearCookie(ADMIN_COOKIE);
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/rsvps", requireAdmin, async (_req, res) => {
+  const rsvps = await listRsvps();
+  // Per-slot attendee list = anyone whose range covers that block.
+  const slots = SLOTS.map((s) => {
+    const attendees = rsvps
+      .filter((r) => slotInRange(s, r.start, r.end))
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        start: r.start,
+        end: r.end,
+        startLabel: formatTimeLabel(r.start),
+        endLabel: formatTimeLabel(r.end),
+        updatedAt: r.updatedAt,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { time: s, label: formatTimeLabel(s), attendees };
+  });
+
+  const guests = rsvps
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      start: r.start,
+      end: r.end,
+      startLabel: formatTimeLabel(r.start),
+      endLabel: formatTimeLabel(r.end),
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  res.json({ total: rsvps.length, slots, guests });
+});
+
+app.delete("/api/admin/rsvps/:id", requireAdmin, async (req, res) => {
+  const ok = await deleteRsvp(req.params.id);
+  res.json({ ok });
+});
+
+// ---- Pages --------------------------------------------------------------
+
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.get("/admin", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`slot-picker listening on http://localhost:${PORT}`);
+  if (ADMIN_PASSWORD === "change-me") {
+    console.warn("⚠  Using default ADMIN_PASSWORD=change-me. Set ADMIN_PASSWORD env var.");
+  }
+});

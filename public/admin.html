@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin — RSVPs</title>
+<link rel="stylesheet" href="/public/styles.css" />
+</head>
+<body>
+<div class="container">
+  <h1>Admin</h1>
+
+  <div id="login" style="display:none;">
+    <div class="form-row">
+      <label for="password">Admin password</label>
+      <input id="password" type="password" autocomplete="current-password" />
+    </div>
+    <div id="login-error" class="error" role="alert"></div>
+    <button id="login-btn" class="btn">Sign in</button>
+  </div>
+
+  <div id="dashboard" style="display:none;">
+    <p class="muted">Total RSVPs: <span id="total">—</span></p>
+
+    <h2>Per slot</h2>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Time</th><th>#</th><th>Attending during this 30-min block</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <h2 style="margin-top:24px;">Guests</h2>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Name</th><th>Range</th><th>Updated</th></tr>
+      </thead>
+      <tbody id="guest-rows"></tbody>
+    </table>
+
+    <p style="margin-top:18px;">
+      <button id="refresh" class="btn btn-secondary">Refresh</button>
+      <button id="logout" class="btn btn-secondary">Sign out</button>
+    </p>
+  </div>
+</div>
+<script src="/public/admin.js"></script>
+</body>
+</html>
