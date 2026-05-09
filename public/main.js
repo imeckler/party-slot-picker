@@ -91,15 +91,7 @@ function render() {
     const time = document.createElement("div");
     time.className = "time";
     time.textContent = s.label;
-
-    const count = document.createElement("div");
-    count.className = "count";
-    if (s.count === 0) count.textContent = "no one yet";
-    else if (s.count === 1) count.textContent = "1 person";
-    else count.textContent = `${s.count} people`;
-
     row.appendChild(time);
-    row.appendChild(count);
     row.addEventListener("click", () => handleClick(s.time));
     row.addEventListener("keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {
