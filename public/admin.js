@@ -20,7 +20,7 @@ function showDash() {
 }
 
 async function load() {
-  const r = await fetch("/api/admin/rsvps");
+  const r = await fetch("api/admin/rsvps");
   if (r.status === 401) {
     showLogin();
     return;
@@ -89,7 +89,7 @@ async function load() {
 async function login() {
   loginError.classList.remove("visible");
   const password = passEl.value;
-  const r = await fetch("/api/admin/login", {
+  const r = await fetch("api/admin/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
@@ -104,7 +104,7 @@ async function login() {
 }
 
 async function logout() {
-  await fetch("/api/admin/logout", { method: "POST" });
+  await fetch("api/admin/logout", { method: "POST" });
   showLogin();
 }
 

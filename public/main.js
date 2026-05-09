@@ -161,14 +161,14 @@ function clearError() {
 }
 
 async function loadSlots() {
-  const r = await fetch("/api/slots");
+  const r = await fetch("api/slots");
   const data = await r.json();
   slots = data.slots;
   boundaries = data.boundaries;
 }
 
 async function loadMe() {
-  const r = await fetch("/api/me");
+  const r = await fetch("api/me");
   const data = await r.json();
   if (data.rsvp) {
     myExistingRsvp = data.rsvp;
@@ -191,7 +191,7 @@ async function submit() {
   if (!r || lastClick === null) return showError("Please pick a time range.");
   submitEl.disabled = true;
   try {
-    const resp = await fetch("/api/rsvp", {
+    const resp = await fetch("api/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, start: r.start, end: r.end }),

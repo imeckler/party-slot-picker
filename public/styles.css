@@ -1,11 +1,11 @@
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-Lt.otf') format('opentype'); font-weight: 300; font-style: normal; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-LtIt.otf') format('opentype'); font-weight: 300; font-style: italic; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-It.otf') format('opentype'); font-weight: 400; font-style: italic; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-SemiboldIt.otf') format('opentype'); font-weight: 600; font-style: italic; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; }
-@font-face { font-family: 'Jenson'; src: url('/public/fonts/AJensonPro-BoldIt.otf') format('opentype'); font-weight: 700; font-style: italic; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-Lt.otf') format('opentype'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-LtIt.otf') format('opentype'); font-weight: 300; font-style: italic; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-It.otf') format('opentype'); font-weight: 400; font-style: italic; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-SemiboldIt.otf') format('opentype'); font-weight: 600; font-style: italic; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'Jenson'; src: url('fonts/AJensonPro-BoldIt.otf') format('opentype'); font-weight: 700; font-style: italic; }
 
 :root {
   --bg: #fafafa;

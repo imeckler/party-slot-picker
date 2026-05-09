@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: slot-picker
+    container_name: slot-picker
+    restart: unless-stopped
+    ports:
+      # Bind only to loopback; nginx on the host reverse-proxies to it.
+      - "127.0.0.1:3737:3000"
+    environment:
+      PORT: "3000"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      PARTY_TITLE: "${PARTY_TITLE:-The Party}"
+      PARTY_ADDRESS: "${PARTY_ADDRESS:-123 Example St, Somewhere}"
+      PARTY_DESCRIPTION: "${PARTY_DESCRIPTION:-Replace this with the real party description. Snacks, drinks, and good company. Come and go as you please.}"
+    volumes:
+      - ./data:/app/data
