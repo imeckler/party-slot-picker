@@ -23,12 +23,17 @@ const PUBLIC_DIR = path.resolve(__dirname, "..", "public");
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "change-me";
+// Allow `\n` in env vars to produce real line breaks (the .env file format
+// can't carry actual newlines, so the convention is a literal backslash-n).
+const expandNewlines = (s: string) => s.replace(/\\n/g, "\n");
+
 const PARTY = {
   title: process.env.PARTY_TITLE ?? "The Party",
-  address: process.env.PARTY_ADDRESS ?? "123 Example St, Somewhere",
-  description:
+  address: expandNewlines(process.env.PARTY_ADDRESS ?? "123 Example St, Somewhere"),
+  description: expandNewlines(
     process.env.PARTY_DESCRIPTION ??
-    "Replace this with the real party description. Snacks, drinks, and good company. Come and go as you please.",
+      "Replace this with the real party description. Snacks, drinks, and good company. Come and go as you please.",
+  ),
 };
 
 const RSVP_COOKIE = "rsvp_id";

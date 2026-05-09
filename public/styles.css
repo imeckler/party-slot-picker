@@ -209,10 +209,12 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   border-radius: 6px;
   margin: 12px 0;
   font-size: 1.6rem;
+  white-space: pre-wrap;
 }
 
 #party-description {
   font-size: 1.6rem;
+  white-space: pre-wrap;
 }
 
 #header-party .muted {
