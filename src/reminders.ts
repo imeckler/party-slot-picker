@@ -15,10 +15,43 @@ export type ReminderKey = "2-days-before" | "day-of";
 type SentRecord = { sentAt: string; ok: number; failed: number };
 type State = { sent: Partial<Record<ReminderKey, SentRecord>> };
 
-// Event date (YYYY-MM-DD, in the server's local timezone) and the hour of day to
-// send reminders. Defaults target the June 19th 2026 event at 10am local.
+// Event date (YYYY-MM-DD), the hour of day to send reminders, and the timezone
+// those are interpreted in. Defaults target June 19th 2026, 10am Pacific —
+// pinned to a named zone so it's correct regardless of the container's TZ.
 const EVENT_DATE = process.env.EVENT_DATE ?? "2026-06-19";
 const SEND_HOUR = Number(process.env.REMINDER_SEND_HOUR ?? 10);
+const REMINDER_TZ = process.env.REMINDER_TZ ?? "America/Los_Angeles";
+
+// Offset (ms) of `tz` from UTC at the given instant: tz_local_wallclock - UTC.
+// Uses Intl (Node's bundled ICU has tz data even on alpine without OS tzdata).
+function tzOffsetMs(at: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(at);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+  // %H can come back as "24" at midnight in some environments; treat as 0.
+  const hour = get("hour") % 24;
+  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), hour, get("minute"), get("second"));
+  return asUtc - at.getTime();
+}
+
+// The UTC instant for a wall-clock time (y-m-d h:mm) in timezone `tz`.
+function zonedTime(y: number, m: number, d: number, hour: number, minute: number, tz: string): Date {
+  const guess = Date.UTC(y, m - 1, d, hour, minute, 0);
+  let result = new Date(guess - tzOffsetMs(new Date(guess), tz));
+  // One correction pass handles DST-boundary cases where the offset differs at
+  // the guessed vs. the corrected instant.
+  const corrected = guess - tzOffsetMs(result, tz);
+  if (corrected !== result.getTime()) result = new Date(corrected);
+  return result;
+}
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const STATE_FILE = path.join(DATA_DIR, "reminders.json");
@@ -28,20 +61,20 @@ function eventParts(): [number, number, number] {
   return [y, m, d];
 }
 
-// The two reminder waves with their local send times.
+// The two reminder waves with their send times (SEND_HOUR in REMINDER_TZ).
 export function reminderSchedule(): { key: ReminderKey; sendAt: Date; label: string }[] {
   const [y, m, d] = eventParts();
   return [
-    { key: "2-days-before", sendAt: new Date(y, m - 1, d - 2, SEND_HOUR, 0, 0, 0), label: "2 days before" },
-    { key: "day-of", sendAt: new Date(y, m - 1, d, SEND_HOUR, 0, 0, 0), label: "day of" },
+    { key: "2-days-before", sendAt: zonedTime(y, m, d - 2, SEND_HOUR, 0, REMINDER_TZ), label: "2 days before" },
+    { key: "day-of", sendAt: zonedTime(y, m, d, SEND_HOUR, 0, REMINDER_TZ), label: "day of" },
   ];
 }
 
-// End of the event day — past this, a never-sent wave is too stale to auto-fire
-// (guards against a first-time deploy after the event blasting old guests).
+// End of the event day (in REMINDER_TZ) — past this, a never-sent wave is too
+// stale to auto-fire (guards against a late first deploy blasting old guests).
 function eventCutoff(): number {
   const [y, m, d] = eventParts();
-  return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+  return zonedTime(y, m, d, 23, 59, REMINDER_TZ).getTime();
 }
 
 async function loadState(): Promise<State> {
@@ -147,5 +180,5 @@ export function startReminderScheduler(party: Party): void {
 
   tick().catch((e) => console.error("reminder tick failed:", e));
   timer = setInterval(() => tick().catch((e) => console.error("reminder tick failed:", e)), 5 * 60 * 1000);
-  console.log(`SMS reminders enabled for ${EVENT_DATE} (send hour ${SEND_HOUR}:00 local).`);
+  console.log(`SMS reminders enabled for ${EVENT_DATE} (send hour ${SEND_HOUR}:00 ${REMINDER_TZ}).`);
 }

@@ -15,10 +15,14 @@ const partyDescEl = document.getElementById("party-description");
 const partyAddrEl = document.getElementById("party-address");
 const partyRangeEl = document.getElementById("party-range");
 const partyConfirmEl = document.getElementById("party-confirm");
+const defaultTitleEl = document.getElementById("default-title");
+const defaultDescEl = document.getElementById("default-description");
+const defaultAddrEl = document.getElementById("default-address");
 const defaultSubtitleEl = document.getElementById("default-subtitle");
 const timeSectionEl = document.getElementById("time-section");
 
 let collectTimes = false; // set from /api/config; when false the picker is hidden
+let party = null;          // cached /api/party so we show details before RSVP
 let slots = [];        // [{ time: "HH:MM" (start of 30-min block), label, count }]
 let boundaries = [];   // [{ time, label }] — 17 boundaries for start..end
 // Selection: range is represented as inclusive of `firstClick` and `lastClick`,
@@ -178,6 +182,21 @@ async function loadConfig() {
   }
 }
 
+// Fetch party details and show them in the default header so guests can read
+// the description/address before RSVPing.
+async function loadParty() {
+  try {
+    const r = await fetch("api/party");
+    const data = await r.json();
+    party = data.party;
+    defaultTitleEl.textContent = party.title;
+    defaultDescEl.textContent = party.description;
+    defaultAddrEl.textContent = party.address;
+  } catch {
+    // Non-fatal; the form still works without the blurb.
+  }
+}
+
 async function loadSlots() {
   const r = await fetch("api/slots");
   const data = await r.json();
@@ -200,13 +219,7 @@ async function loadMe() {
       lastClick = fmt(endMin);
     }
     // Swap to the party-info header since this person has already RSVPed.
-    try {
-      const pr = await fetch("api/party");
-      const pdata = await pr.json();
-      showParty(pdata.party, data.rsvp, { scroll: false });
-    } catch {
-      // Non-fatal; submitting will fetch the party info again.
-    }
+    if (party) showParty(party, data.rsvp, { scroll: false });
   }
 }
 
@@ -274,7 +287,7 @@ submitEl.addEventListener("click", submit);
 })();
 
 (async function init() {
-  await loadConfig();
+  await Promise.all([loadConfig(), loadParty()]);
   if (collectTimes) {
     timeSectionEl.style.display = "block";
     await Promise.all([loadSlots(), loadMe()]);
