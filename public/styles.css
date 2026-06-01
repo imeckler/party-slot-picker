@@ -212,7 +212,8 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   white-space: pre-wrap;
 }
 
-#party-description {
+#party-description,
+#default-description {
   font-size: 1.6rem;
   white-space: pre-wrap;
 }
