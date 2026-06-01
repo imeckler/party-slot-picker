@@ -148,7 +148,7 @@ p { margin: 0 0 12px; }
 
 label { font-weight: 600; font-size: 1.45rem; }
 
-input[type="text"], input[type="password"] {
+input[type="text"], input[type="password"], input[type="tel"] {
   font: inherit;
   padding: 10px 12px;
   border: 1px solid var(--border);
