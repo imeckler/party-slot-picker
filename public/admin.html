@@ -22,21 +22,38 @@
   <div id="dashboard" style="display:none;">
     <p class="muted">Total RSVPs: <span id="total">—</span></p>
 
-    <h2>Per slot</h2>
-    <table class="admin-table">
-      <thead>
-        <tr><th>Time</th><th>#</th><th>Attending during this 30-min block</th></tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div id="perslot-section">
+      <h2>Per slot</h2>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Time</th><th>#</th><th>Attending during this 30-min block</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
 
     <h2 style="margin-top:24px;">Guests</h2>
     <table class="admin-table">
       <thead>
-        <tr><th>Name</th><th>Range</th><th>Updated</th></tr>
+        <tr><th>Name</th><th>Phone</th><th id="range-col">Range</th><th>Updated</th></tr>
       </thead>
       <tbody id="guest-rows"></tbody>
     </table>
+
+    <h2 style="margin-top:24px;">SMS reminders</h2>
+    <p id="reminders-status" class="muted">—</p>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Wave</th><th>Sends at</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody id="reminder-rows"></tbody>
+    </table>
+    <div class="form-row" style="margin-top:12px;">
+      <label for="test-to">Send a test SMS to</label>
+      <input id="test-to" type="tel" inputmode="tel" maxlength="40" placeholder="e.g. (415) 555-2671" />
+    </div>
+    <div id="reminder-msg" class="muted"></div>
+    <p><button id="test-send" class="btn btn-secondary">Send test SMS</button></p>
 
     <p style="margin-top:18px;">
       <button id="refresh" class="btn btn-secondary">Refresh</button>

@@ -5,8 +5,9 @@ import { SLOTS, slotInRange } from "./slots.js";
 export type Rsvp = {
   id: string;
   name: string;
-  start: string; // boundary, inclusive
-  end: string;   // boundary, exclusive
+  phone: string;
+  start?: string; // boundary, inclusive (omitted when times aren't collected)
+  end?: string;   // boundary, exclusive (omitted when times aren't collected)
   createdAt: string;
   updatedAt: string;
 };
@@ -58,8 +59,9 @@ export async function getRsvp(id: string): Promise<Rsvp | undefined> {
 export async function upsertRsvp(input: {
   id?: string;
   name: string;
-  start: string;
-  end: string;
+  phone: string;
+  start?: string;
+  end?: string;
 }): Promise<Rsvp> {
   const db = await load();
   const now = new Date().toISOString();
@@ -67,6 +69,7 @@ export async function upsertRsvp(input: {
     const existing = db.rsvps.find((r) => r.id === input.id);
     if (existing) {
       existing.name = input.name;
+      existing.phone = input.phone;
       existing.start = input.start;
       existing.end = input.end;
       existing.updatedAt = now;
@@ -77,6 +80,7 @@ export async function upsertRsvp(input: {
   const created: Rsvp = {
     id: input.id ?? crypto.randomUUID(),
     name: input.name,
+    phone: input.phone,
     start: input.start,
     end: input.end,
     createdAt: now,
@@ -103,6 +107,7 @@ export async function countsBySlot(): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};
   for (const s of SLOTS) counts[s] = 0;
   for (const r of rsvps) {
+    if (!r.start || !r.end) continue;
     for (const s of SLOTS) {
       if (slotInRange(s, r.start, r.end)) counts[s]++;
     }

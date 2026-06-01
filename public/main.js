@@ -4,6 +4,7 @@
 
 const slotsEl = document.getElementById("slots");
 const nameEl = document.getElementById("name");
+const phoneEl = document.getElementById("phone");
 const submitEl = document.getElementById("submit");
 const errorEl = document.getElementById("error");
 const rangeDisplayEl = document.getElementById("range-display");
@@ -13,7 +14,11 @@ const partyTitleEl = document.getElementById("party-title");
 const partyDescEl = document.getElementById("party-description");
 const partyAddrEl = document.getElementById("party-address");
 const partyRangeEl = document.getElementById("party-range");
+const partyConfirmEl = document.getElementById("party-confirm");
+const defaultSubtitleEl = document.getElementById("default-subtitle");
+const timeSectionEl = document.getElementById("time-section");
 
+let collectTimes = false; // set from /api/config; when false the picker is hidden
 let slots = [];        // [{ time: "HH:MM" (start of 30-min block), label, count }]
 let boundaries = [];   // [{ time, label }] — 17 boundaries for start..end
 // Selection: range is represented as inclusive of `firstClick` and `lastClick`,
@@ -41,6 +46,17 @@ function labelFor(boundary) {
   const period = h >= 12 ? "pm" : "am";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return m === 0 ? `${h12}:00 ${period}` : `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+// Validate and normalize a US phone number to E.164 (+1XXXXXXXXXX). Returns
+// null if it isn't a valid NANP US number. Mirrors normalizeUsPhone on the
+// server so we send an already-normalized value.
+function normalizeUsPhone(input) {
+  const digits = input.replace(/\D/g, "");
+  const national = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+  if (national.length !== 10) return null;
+  if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(national)) return null;
+  return `+1${national}`;
 }
 
 // ---- Density coloring ----
@@ -136,9 +152,10 @@ function updateRangeDisplay() {
 }
 
 function updateSubmitState() {
-  const r = rangeBoundaries();
-  const ready = !!r && lastClick !== null && nameEl.value.trim().length > 0;
-  submitEl.disabled = !ready;
+  const nameOk = nameEl.value.trim().length > 0;
+  const phoneOk = normalizeUsPhone(phoneEl.value) !== null;
+  const timeOk = !collectTimes || (rangeBoundaries() !== null && lastClick !== null);
+  submitEl.disabled = !(nameOk && phoneOk && timeOk);
 }
 
 function showError(msg) {
@@ -149,6 +166,16 @@ function showError(msg) {
 function clearError() {
   errorEl.textContent = "";
   errorEl.classList.remove("visible");
+}
+
+async function loadConfig() {
+  try {
+    const r = await fetch("api/config");
+    const data = await r.json();
+    collectTimes = !!data.collectTimes;
+  } catch {
+    collectTimes = false;
+  }
 }
 
 async function loadSlots() {
@@ -164,11 +191,14 @@ async function loadMe() {
   if (data.rsvp) {
     myExistingRsvp = data.rsvp;
     nameEl.value = data.rsvp.name;
-    // Restore inclusive endpoints from stored half-open range.
-    firstClick = data.rsvp.start;
-    const endMin = toMinutes(data.rsvp.end) - 30;
-    const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-    lastClick = fmt(endMin);
+    if (data.rsvp.phone) phoneEl.value = data.rsvp.phone;
+    // Restore inclusive endpoints from stored half-open range (times mode only).
+    if (collectTimes && data.rsvp.start && data.rsvp.end) {
+      firstClick = data.rsvp.start;
+      const endMin = toMinutes(data.rsvp.end) - 30;
+      const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+      lastClick = fmt(endMin);
+    }
     // Swap to the party-info header since this person has already RSVPed.
     try {
       const pr = await fetch("api/party");
@@ -183,15 +213,22 @@ async function loadMe() {
 async function submit() {
   clearError();
   const name = nameEl.value.trim();
+  const phone = normalizeUsPhone(phoneEl.value);
   const r = rangeBoundaries();
   if (!name) return showError("Please enter your name.");
-  if (!r || lastClick === null) return showError("Please pick a time range.");
+  if (!phone) return showError("Please enter a valid US phone number.");
+  if (collectTimes && (!r || lastClick === null)) return showError("Please pick a time range.");
   submitEl.disabled = true;
+  const payload = { name, phone };
+  if (collectTimes && r) {
+    payload.start = r.start;
+    payload.end = r.end;
+  }
   try {
     const resp = await fetch("api/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, start: r.start, end: r.end }),
+      body: JSON.stringify(payload),
     });
     const data = await resp.json();
     if (!resp.ok) {
@@ -211,13 +248,18 @@ function showParty(party, rsvp, { scroll = true } = {}) {
   partyTitleEl.textContent = party.title;
   partyDescEl.textContent = party.description;
   partyAddrEl.textContent = party.address;
-  partyRangeEl.textContent = `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`;
+  if (collectTimes && rsvp.start && rsvp.end) {
+    partyRangeEl.textContent = `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`;
+  } else {
+    partyConfirmEl.textContent = "You're on the list. Update your name or number below to change your RSVP.";
+  }
   headerDefaultEl.style.display = "none";
   headerPartyEl.style.display = "block";
   if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 nameEl.addEventListener("input", updateSubmitState);
+phoneEl.addEventListener("input", updateSubmitState);
 submitEl.addEventListener("click", submit);
 
 // Once we've been let in, the cookie carries us — scrub the password from the
@@ -232,6 +274,15 @@ submitEl.addEventListener("click", submit);
 })();
 
 (async function init() {
-  await Promise.all([loadSlots(), loadMe()]);
-  render();
+  await loadConfig();
+  if (collectTimes) {
+    timeSectionEl.style.display = "block";
+    await Promise.all([loadSlots(), loadMe()]);
+    render();
+  } else {
+    // No times: just a plain name + phone RSVP.
+    defaultSubtitleEl.textContent = "Let us know you're coming";
+    await loadMe();
+    updateSubmitState();
+  }
 })();
