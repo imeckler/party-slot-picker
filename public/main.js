@@ -220,6 +220,17 @@ function showParty(party, rsvp, { scroll = true } = {}) {
 nameEl.addEventListener("input", updateSubmitState);
 submitEl.addEventListener("click", submit);
 
+// Once we've been let in, the cookie carries us — scrub the password from the
+// URL so a shared screenshot or refresh doesn't leak the invite token.
+(function stripPasswordParam() {
+  const params = new URLSearchParams(location.search);
+  if (!params.has("password")) return;
+  params.delete("password");
+  const qs = params.toString();
+  const cleaned = location.pathname + (qs ? "?" + qs : "") + location.hash;
+  history.replaceState(null, "", cleaned);
+})();
+
 (async function init() {
   await Promise.all([loadSlots(), loadMe()]);
   render();

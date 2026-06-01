@@ -23,6 +23,9 @@ const PUBLIC_DIR = path.resolve(__dirname, "..", "public");
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "change-me";
+// When set, every guest-facing route requires either ?password=XXX (which
+// installs a cookie) or a previously-set cookie. Leave unset to disable.
+const SITE_PASSWORD = process.env.SITE_PASSWORD ?? "";
 // Allow `\n` in env vars to produce real line breaks (the .env file format
 // can't carry actual newlines, so the convention is a literal backslash-n).
 const expandNewlines = (s: string) => s.replace(/\\n/g, "\n");
@@ -38,7 +41,36 @@ const PARTY = {
 
 const RSVP_COOKIE = "rsvp_id";
 const ADMIN_COOKIE = "admin_session";
+const SITE_COOKIE = "site_session";
 const COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 365;
+
+function requireSite(req: Request, res: Response, next: NextFunction) {
+  if (!SITE_PASSWORD) return next();
+  const provided = typeof req.query.password === "string" ? req.query.password : "";
+  if (provided === SITE_PASSWORD) {
+    res.cookie(SITE_COOKIE, SITE_PASSWORD, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: COOKIE_MAX_AGE,
+    });
+    return next();
+  }
+  if (req.cookies[SITE_COOKIE] === SITE_PASSWORD) return next();
+  if (req.path.startsWith("/api/")) {
+    return res.status(401).json({ error: "Password required." });
+  }
+  res
+    .status(401)
+    .type("html")
+    .send(
+      `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Password required</title></head>
+<body style="font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 28rem; margin: 0 auto; color: #222;">
+<h1 style="margin-top: 0;">Password required</h1>
+<p>This page is private. You need an invite link to view it.</p>
+</body></html>`,
+    );
+}
 
 const app = express();
 app.use(express.json());
@@ -47,7 +79,7 @@ app.use("/public", express.static(PUBLIC_DIR));
 
 // ---- Public API ---------------------------------------------------------
 
-app.get("/api/slots", async (_req, res) => {
+app.get("/api/slots", requireSite, async (_req, res) => {
   const counts = await countsBySlot();
   res.json({
     slots: SLOTS.map((s) => ({ time: s, label: formatTimeLabel(s), count: counts[s] ?? 0 })),
@@ -55,14 +87,14 @@ app.get("/api/slots", async (_req, res) => {
   });
 });
 
-app.get("/api/me", async (req, res) => {
+app.get("/api/me", requireSite, async (req, res) => {
   const id = req.cookies[RSVP_COOKIE];
   if (!id) return res.json({ rsvp: null });
   const rsvp = await getRsvp(id);
   res.json({ rsvp: rsvp ?? null });
 });
 
-app.post("/api/rsvp", async (req, res) => {
+app.post("/api/rsvp", requireSite, async (req, res) => {
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   const start = typeof req.body?.start === "string" ? req.body.start : "";
   const end = typeof req.body?.end === "string" ? req.body.end : "";
@@ -88,14 +120,14 @@ app.post("/api/rsvp", async (req, res) => {
   res.json({ rsvp, party: PARTY });
 });
 
-app.post("/api/rsvp/clear", async (req, res) => {
+app.post("/api/rsvp/clear", requireSite, async (req, res) => {
   const id = req.cookies[RSVP_COOKIE];
   if (id) await deleteRsvp(id);
   res.clearCookie(RSVP_COOKIE);
   res.json({ ok: true });
 });
 
-app.get("/api/party", (_req, res) => {
+app.get("/api/party", requireSite, (_req, res) => {
   res.json({ party: PARTY });
 });
 
@@ -166,7 +198,7 @@ app.delete("/api/admin/rsvps/:id", requireAdmin, async (req, res) => {
 
 // ---- Pages --------------------------------------------------------------
 
-app.get("/", (_req, res) => {
+app.get("/", requireSite, (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 

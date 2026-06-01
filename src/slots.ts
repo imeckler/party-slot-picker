@@ -4,7 +4,7 @@
 //              start/end of an RSVP range. End is exclusive.
 
 const FIRST_MIN = 12 * 60;   // noon
-const LAST_MIN = 20 * 60;    // 8 pm
+const LAST_MIN = 17 * 60;    // 5 pm
 const STEP = 30;
 
 function fmt(mins: number): string {
