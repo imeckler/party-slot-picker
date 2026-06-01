@@ -7,6 +7,12 @@ services:
     ports:
       # Bind only to loopback; nginx on the host reverse-proxies to it.
       - "127.0.0.1:3737:3000"
+    # Load everything from .env into the container (Twilio creds, EVENT_DATE,
+    # REMINDER_*, SITE_PASSWORD, COLLECT_TIMES, etc.). The explicit `environment`
+    # block below overrides these and supplies defaults for the party vars.
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: "3000"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
