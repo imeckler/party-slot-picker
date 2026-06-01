@@ -17,7 +17,6 @@ const partyRangeEl = document.getElementById("party-range");
 const partyConfirmEl = document.getElementById("party-confirm");
 const defaultTitleEl = document.getElementById("default-title");
 const defaultDescEl = document.getElementById("default-description");
-const defaultAddrEl = document.getElementById("default-address");
 const defaultSubtitleEl = document.getElementById("default-subtitle");
 const timeSectionEl = document.getElementById("time-section");
 
@@ -191,7 +190,6 @@ async function loadParty() {
     party = data.party;
     defaultTitleEl.textContent = party.title;
     defaultDescEl.textContent = party.description;
-    defaultAddrEl.textContent = party.address;
   } catch {
     // Non-fatal; the form still works without the blurb.
   }
