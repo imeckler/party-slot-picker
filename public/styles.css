@@ -158,6 +158,17 @@ input[type="text"], input[type="password"], input[type="tel"] {
 
 input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
+/* Read-only RSVP details shown after someone has RSVPed. Mirrors .form-row so a
+   label/value pair reads at the same size as the form it replaces. */
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0;
+}
+.detail-label { font-weight: 600; font-size: 1.45rem; }
+.detail-value { font-size: 1.2rem; }
+
 .btn {
   display: inline-block;
   font: inherit;

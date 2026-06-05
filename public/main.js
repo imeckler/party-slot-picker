@@ -13,12 +13,13 @@ const headerPartyEl = document.getElementById("header-party");
 const partyTitleEl = document.getElementById("party-title");
 const partyDescEl = document.getElementById("party-description");
 const partyAddrEl = document.getElementById("party-address");
-const partyRangeEl = document.getElementById("party-range");
 const partyConfirmEl = document.getElementById("party-confirm");
 const defaultTitleEl = document.getElementById("default-title");
 const defaultDescEl = document.getElementById("default-description");
 const defaultSubtitleEl = document.getElementById("default-subtitle");
 const timeSectionEl = document.getElementById("time-section");
+const rsvpFormEl = document.getElementById("rsvp-form");
+const rsvpDetailsEl = document.getElementById("rsvp-details");
 
 let collectTimes = false; // set from /api/config; when false the picker is hidden
 let party = null;          // cached /api/party so we show details before RSVP
@@ -60,6 +61,12 @@ function normalizeUsPhone(input) {
   if (national.length !== 10) return null;
   if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(national)) return null;
   return `+1${national}`;
+}
+
+// Render a stored E.164 US number (+1XXXXXXXXXX) as "(XXX) XXX-XXXX".
+function formatUsPhone(e164) {
+  const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(e164 || "");
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : (e164 || "");
 }
 
 // ---- Density coloring ----
@@ -255,17 +262,37 @@ async function submit() {
   }
 }
 
+function detailRow(label, value) {
+  const row = document.createElement("div");
+  row.className = "detail-row";
+  const l = document.createElement("span");
+  l.className = "detail-label";
+  l.textContent = label;
+  const v = document.createElement("span");
+  v.className = "detail-value";
+  v.textContent = value;
+  row.append(l, v);
+  return row;
+}
+
 function showParty(party, rsvp, { scroll = true } = {}) {
   partyTitleEl.textContent = party.title;
   partyDescEl.textContent = party.description;
   partyAddrEl.textContent = party.address;
+  partyConfirmEl.textContent = "You're all set — see you there!";
+
+  // Replace the editable form with the guest's details as read-only text.
+  rsvpDetailsEl.innerHTML = "";
+  rsvpDetailsEl.appendChild(detailRow("Name", rsvp.name));
+  if (rsvp.phone) rsvpDetailsEl.appendChild(detailRow("Phone", formatUsPhone(rsvp.phone)));
   if (collectTimes && rsvp.start && rsvp.end) {
-    partyRangeEl.textContent = `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`;
-  } else {
-    partyConfirmEl.textContent = "You're on the list. Update your name or number below to change your RSVP.";
+    rsvpDetailsEl.appendChild(detailRow("Time", `${labelFor(rsvp.start)} → ${labelFor(rsvp.end)}`));
   }
+
   headerDefaultEl.style.display = "none";
   headerPartyEl.style.display = "block";
+  rsvpFormEl.style.display = "none";
+  rsvpDetailsEl.style.display = "block";
   if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 

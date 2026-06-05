@@ -18,33 +18,40 @@
     <h1 id="party-title"></h1>
     <p id="party-description"></p>
     <div class="address" id="party-address"></div>
-    <p class="muted" id="party-confirm">You're coming <strong id="party-range"></strong>. Update your time or name below to change your RSVP.</p>
+    <p class="muted" id="party-confirm"></p>
   </div>
 
-  <!-- Time picker + density. Hidden unless the server enables COLLECT_TIMES. -->
-  <div id="time-section" style="display:none;">
-    <div class="legend">
-      <span>quiet</span>
-      <div class="legend-bar"></div>
-      <span>busy</span>
+  <!-- Editable RSVP form. Hidden (and replaced by #rsvp-details) once the guest
+       has already RSVPed. -->
+  <div id="rsvp-form">
+    <!-- Time picker + density. Hidden unless the server enables COLLECT_TIMES. -->
+    <div id="time-section" style="display:none;">
+      <div class="legend">
+        <span>quiet</span>
+        <div class="legend-bar"></div>
+        <span>busy</span>
+      </div>
+      <div id="range-display" class="range-display">Tap a row to set your arrival time, then tap another to set when you'll leave.</div>
+      <div id="slots" aria-label="Time range picker"></div>
     </div>
-    <div id="range-display" class="range-display">Tap a row to set your arrival time, then tap another to set when you'll leave.</div>
-    <div id="slots" aria-label="Time range picker"></div>
+
+    <div class="form-row">
+      <label for="name">Your name</label>
+      <input id="name" type="text" autocomplete="name" maxlength="80" placeholder="e.g. Alex Rivera" />
+    </div>
+
+    <div class="form-row">
+      <label for="phone">Your phone number</label>
+      <input id="phone" type="tel" autocomplete="tel-national" inputmode="tel" maxlength="40" placeholder="e.g. (415) 555-2671" />
+    </div>
+
+    <div id="error" class="error" role="alert"></div>
+
+    <button id="submit" class="btn" disabled>Submit RSVP</button>
   </div>
 
-  <div class="form-row">
-    <label for="name">Your name</label>
-    <input id="name" type="text" autocomplete="name" maxlength="80" placeholder="e.g. Alex Rivera" />
-  </div>
-
-  <div class="form-row">
-    <label for="phone">Your phone number</label>
-    <input id="phone" type="tel" autocomplete="tel-national" inputmode="tel" maxlength="40" placeholder="e.g. (415) 555-2671" />
-  </div>
-
-  <div id="error" class="error" role="alert"></div>
-
-  <button id="submit" class="btn" disabled>Submit RSVP</button>
+  <!-- Read-only view shown once the guest has RSVPed: their details as text. -->
+  <div id="rsvp-details" style="display:none;"></div>
 </div>
 <script src="public/main.js"></script>
 </body>
