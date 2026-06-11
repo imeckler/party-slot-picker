@@ -99,7 +99,7 @@ function messageFor(key: ReminderKey, rsvp: Rsvp, party: Party): string {
   const when = key === "day-of" ? "today" : "in 2 days";
   const coming =
     rsvp.start && rsvp.end ? ` You're coming ${formatRange(rsvp.start, rsvp.end)}.` : "";
-  return `Reminder: ${party.title} is ${when}!${coming} ${party.address}`;
+  return `Reminder: ${party.title} is ${when}!${coming} ${party.address} Bring sandals!`;
 }
 
 // Send one reminder wave to all guests. No-op (returns the prior record) if the
