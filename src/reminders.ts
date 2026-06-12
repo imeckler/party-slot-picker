@@ -16,9 +16,9 @@ type SentRecord = { sentAt: string; ok: number; failed: number };
 type State = { sent: Partial<Record<ReminderKey, SentRecord>> };
 
 // Event date (YYYY-MM-DD), the hour of day to send reminders, and the timezone
-// those are interpreted in. Defaults target June 19th 2026, 10am Pacific —
+// those are interpreted in. Defaults target June 14th 2026, 10am Pacific —
 // pinned to a named zone so it's correct regardless of the container's TZ.
-const EVENT_DATE = process.env.EVENT_DATE ?? "2026-06-19";
+const EVENT_DATE = process.env.EVENT_DATE ?? "2026-06-14";
 const SEND_HOUR = Number(process.env.REMINDER_SEND_HOUR ?? 10);
 const REMINDER_TZ = process.env.REMINDER_TZ ?? "America/Los_Angeles";
 
